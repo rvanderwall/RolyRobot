@@ -67,12 +67,8 @@ class MeccaProtocol:
         return resp
 
     def __send_data_to_module_chain(self, moduleID):
-        self.port.send_one_byte(HEADER)
-        self.port.send_one_byte(self.data[0])
-        self.port.send_one_byte(self.data[1])
-        self.port.send_one_byte(self.data[2])
-        self.port.send_one_byte(self.data[3])
-        self.port.send_one_byte(self.__calculate_checksum(moduleID))
+        data = [HEADER] + self.data + [self.__calculate_checksum(moduleID),]
+        self.port.send_many_bytes(data)
         input_byte = self.port.receive_one_byte()
         return input_byte
 
@@ -84,3 +80,6 @@ class MeccaProtocol:
         checksum |= moduleID
         return checksum
 
+
+if __name__ == "__main__":
+    print("MeccanoModule")

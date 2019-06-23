@@ -1,10 +1,12 @@
 __author__ = 'robert'
 
 import time
+from time import sleep
 import datetime as dt
 
 try:
     import RPi.GPIO as GPIO
+    print("Imported GPIO")
 except:
     from Serial.MockGPIO import MockGPIO
     GPIO = MockGPIO()
@@ -23,8 +25,17 @@ class SerialPort:
         GPIO.setmode(GPIO.BCM)
         self.pin = pin
 
+    def send_many_bytes(self, bytes):
+        print("Send many bytes")
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.pin, GPIO.OUT)
+        for byte in bytes:
+            self.__send(byte)
+        GPIO.cleanup()
+
     def send_one_byte(self, byte):
-        # print("Set pin to OUTPUT")
+        print("Send one byte")
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.OUT)
         self.__send(byte)
         GPIO.cleanup()
@@ -34,13 +45,17 @@ class SerialPort:
             Returns one byte or -1 if no module is responding.
         :return:
         '''
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.IN)
         byte = self.__receive()
         GPIO.cleanup()
         return byte
 
     def __send(self, byte):
+        print("Send byte {}".format(byte))
+        start = dt.datetime.now()
         self.__output_bit(0)        # Start bit
+
 
         bit_mask = 0x01
         while bit_mask < 0x100:
@@ -52,21 +67,28 @@ class SerialPort:
 
         self.__output_bit(1)        # Stop bits
         self.__output_bit(1)
+        end = dt.datetime.now()
+        print("Byte time = {} ({})".format((end-start).microseconds, 11 * BIT_DELAY))
 
 
     def __output_bit(self, value):
-        now = dt.datetime.now()
+        start = dt.datetime.now()
         if value:
             GPIO.output(self.pin, GPIO.HIGH)
         else:
             GPIO.output(self.pin, GPIO.LOW)
-        self.__delay_in_microseconds(now, BIT_DELAY)
-        pass
 
-    def __delay_in_microseconds(self, cur_time, delay):
+	# Compensate for time it takes to get now()
+        end = self.__delay_in_microseconds(start, BIT_DELAY - 60)
+        # print("Bit time = {}".format(end - start))
+        # print("Excess Bit time = {}".format((end - start).microseconds - BIT_DELAY))
+
+    def __delay_in_microseconds(self, start, delay):
         now = dt.datetime.now()
-        while (now - cur_time).microseconds < delay:
+        while (now - start).microseconds < delay:
             now = dt.datetime.now()
+        # print("Delay time = {}".format(now-start))
+        return now
 
     def __receive(self):
         byte = 0
@@ -132,4 +154,16 @@ def test_timing():
     # 10		120
     # 0		45
     # None		35 (17)
+
+if __name__ == "__main__":
+    print("Serial Port")
+    port = SerialPort(pin=4)
+    port.send_one_byte(0xA5)
+#    for i in range(10):
+#        port.send_one_byte(0xff)
+#    port.send_many_bytes([0xAA,0x55,0xAA,0x55])
+
+#    for i in range(10):
+#        byte=port.receive_one_byte()
+#        print("Got one byte: {}".format(byte))
 
