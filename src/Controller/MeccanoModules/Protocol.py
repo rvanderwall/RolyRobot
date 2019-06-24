@@ -1,5 +1,5 @@
 __author__ = 'robert'
-
+from time import sleep
 
 HEADER = 0xFF
 
@@ -39,7 +39,7 @@ class MeccaProtocol:
         self.port = port
         assert MAX_NUM_MODULES ==len(self.data)
 
-    def set_inititlization_sequence(self):
+    def set_initialization_sequence(self):
         self.data = [ID_NOT_ASSIGNED] * 4
 
     def set_reset_data(self, module_id):
@@ -64,12 +64,15 @@ class MeccaProtocol:
         '''
         assert MIN_MODULE_ID <= module_id < MAX_NUM_MODULES
         resp = self.__send_data_to_module_chain(module_id)
+        sleep(0.05)
         return resp
 
     def __send_data_to_module_chain(self, moduleID):
         data = [HEADER] + self.data + [self.__calculate_checksum(moduleID),]
         self.port.send_many_bytes(data)
         input_byte = self.port.receive_one_byte()
+        if input_byte == -1:
+            input_byte = MODULE_NOT_RESPONDING
         return input_byte
 
     def __calculate_checksum(self, moduleID):

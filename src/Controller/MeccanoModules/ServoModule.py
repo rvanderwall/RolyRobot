@@ -1,5 +1,6 @@
 __author__ = 'robert'
 
+from MeccanoModules.Protocol import MODULE_NOT_RESPONDING
 
 SERVO_LIM_MODE = 0xFA
 RESERVED_2 = 0xF9
@@ -37,8 +38,8 @@ class ServoModule():
         assert 0 <= red <= 1
         assert 0 <= green <= 1
         assert 0 <= blue <= 1
-        data = 0xF | (red) | (green << 1) | (blue << 2)
-        self.__set_data(data)
+        data = 0xF0 | (red) | (green << 1) | (blue << 2)
+        self.__send_data(data)
 
     def set_position(self, position):
         '''
@@ -51,7 +52,7 @@ class ServoModule():
             position = 0x18
         if position > 0xE8:
             position = 0xE8
-        self.__set_data(position)
+        self.__send_data(position)
 
     def set_LIM_mode(self):
         '''
@@ -60,14 +61,17 @@ class ServoModule():
             the servo IC stops driving the motor and just sends back the position of the servo.
         :return:
         '''
-        position = self.__set_data(SERVO_LIM_MODE)
+        position = self.__send_data(SERVO_LIM_MODE)
         return position
 
     def get_position(self):
         resp = self.set_LIM_mode()
         return resp
 
-    def __set_data(self, data):
+    def __send_data(self, data):
         self.protocol.set_data(self.module_id, data)
-        resp = self.protocol.send_data_and_get_response(self.module_id)
+        for rety in range(2):
+            resp = self.protocol.send_data_and_get_response(self.module_id)
+            if resp != MODULE_NOT_RESPONDING:
+                break
         return resp
