@@ -63,7 +63,7 @@ class ServoModule:
             the servo IC stops driving the motor and just sends back the position of the servo.
         :return:
         """
-        position = self.__send_data(SERVO_LIM_MODE)
+        position = self.__send_data_and_get_response(SERVO_LIM_MODE)
         return position
 
     def get_position(self):
@@ -72,9 +72,14 @@ class ServoModule:
 
     def __send_data(self, data):
         self.protocol.set_data(self.module_id, data)
+        self.protocol.send_data(self.module_id)
+
+    def __send_data_and_get_response(self, data):
+        self.protocol.set_data(self.module_id, data)
         resp = MODULE_NOT_RESPONDING
         for rety in range(2):
             resp = self.protocol.send_data_and_get_response(self.module_id)
             if resp != MODULE_NOT_RESPONDING:
                 break
         return resp
+

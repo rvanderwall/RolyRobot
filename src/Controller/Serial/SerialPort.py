@@ -29,7 +29,7 @@ class SerialPort:
         self.bit_delay = NOMINAL_BIT_DELAY - bit_compensation
 
     def send_many_bytes(self, bytes_to_send):
-        print("Send many bytes")
+        # print("Send many bytes")
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.OUT)
         for byte_to_send in bytes_to_send:
@@ -55,7 +55,7 @@ class SerialPort:
         return received_byte
 
     def __send(self, byte_to_send):
-        print("Send byte {}".format(hex(byte_to_send)))
+        # print("Send byte {}".format(hex(byte_to_send)))
         self.__output_bit(0)        # Start bit
 
         bit_mask = 0x01

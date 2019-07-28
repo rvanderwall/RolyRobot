@@ -17,10 +17,10 @@ class ModuleDiscovery:
         print("Discover modules")
         self.protocol.set_initialization_sequence()
 
-        # for module_id in range(MIN_MODULE_ID, MAX_NUM_MODULES):
-        for module_id in range(2):
+        for module_id in range(MAX_NUM_MODULES):
             ok = self.__discover_one_module(module_id)
             if not ok:
+                # We know that modules are chained, if not OK, nothing left in chain
                 break
 
         return self.modules
@@ -34,27 +34,31 @@ class ModuleDiscovery:
         """
         found = False
         counter = 0
-        while not found and counter < 2:
-            print("Top of module discovery loop {} for module {}".format(counter, module_id))
+        while not found and counter < 10:
+            # print("Top of module discovery loop {} for module {}".format(counter, module_id))
 
             resp = self.protocol.send_data_and_get_response(module_id)
-            print("Got resp {} from module {}".format(hex(resp), module_id))
+            # print("Got resp {} from module {}".format(hex(resp), module_id))
 
             if resp == MODULE_NOT_RESPONDING:
-                print("ERROR: Module {} not responding".format(module_id))
+                print("ERROR: Module {} not responding to discovery query".format(module_id))
 
             if resp == ID_NOT_ASSIGNED:
+                print("Module {} has responded to discovery query".format(module_id))
                 found = True
 
             counter += 1
+
+        if not found:
+            return False
 
         self.protocol.set_report_type_instruction(module_id)
         found = False
         counter = 0
         while not found and counter < 2:
-            print("Top of module type discovery loop {} for module {}".format(counter, module_id))
+            # print("Top of module type discovery loop {} for module {}".format(counter, module_id))
             resp = self.protocol.send_data_and_get_response(module_id)
-            print("Got resp {} from module {}".format(hex(resp), module_id))
+            # print("Got resp {} from module {}".format(hex(resp), module_id))
 
             if resp == MODULE_TYPE_SERVO:
                 module = ServoModule(self.protocol, module_id)
@@ -69,6 +73,9 @@ class ModuleDiscovery:
                 found = True
 
             counter += 1
+
+        if not found:
+            return False
 
         return True
 

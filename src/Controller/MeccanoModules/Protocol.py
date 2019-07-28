@@ -54,6 +54,17 @@ class MeccaProtocol:
         assert 0 <= data < RESERVED_1
         self.data[module_id] = data
 
+    def send_data(self, module_id):
+        """
+            Sends the current data to all four modules and does not
+            get a response
+        :param module_id:
+        :return:
+        """
+        assert MIN_MODULE_ID <= module_id < MAX_NUM_MODULES
+        self.__send_data_to_module_chain(module_id)
+        sleep(0.10)
+
     def send_data_and_get_response(self, module_id):
         """
             Sends the current data to all four modules and gets
@@ -62,13 +73,16 @@ class MeccaProtocol:
         :return:
         """
         assert MIN_MODULE_ID <= module_id < MAX_NUM_MODULES
-        resp = self.__send_data_to_module_chain(module_id)
-        sleep(0.05)
+        self.__send_data_to_module_chain(module_id)
+        resp = self.__get_data_from_chain()
+        sleep(0.10)
         return resp
 
     def __send_data_to_module_chain(self, module_id):
         data = [HEADER] + self.data + [self.__calculate_checksum(module_id), ]
         self.port.send_many_bytes(data)
+
+    def __get_data_from_chain(self):
         input_byte = self.port.receive_one_byte()
         if input_byte == -1:
             input_byte = MODULE_NOT_RESPONDING
