@@ -1,6 +1,7 @@
+from MeccanoModules.Protocol import MODULE_NOT_RESPONDING
+
 __author__ = 'robert'
 
-from MeccanoModules.Protocol import MODULE_NOT_RESPONDING
 
 SERVO_LIM_MODE = 0xFA
 RESERVED_2 = 0xF9
@@ -16,7 +17,8 @@ SERVO_COLOR_GREEN = 0xF2
 SERVO_COLOR_RED = 0xF1
 SERVO_COLOR_OFF = 0xF0
 
-class ServoModule():
+
+class ServoModule:
     def __init__(self, protocol, module_id):
         assert 0 <= module_id <= 3
         self.protocol = protocol
@@ -25,7 +27,7 @@ class ServoModule():
         self.protocol.set_data(module_id, SERVO_COLOR_BLUE)
 
     def set_color(self, red, green, blue):
-        '''
+        """
             0xF7 = R, G, B - all On
             0xF6 = G, B - On; R - Off
             0xF5 = R, B - On; G - Off
@@ -34,20 +36,20 @@ class ServoModule():
             0xF2 = G - On; R, B - Off
             0xF1 = R - On; G, B - Off
             0xF0 = R, G, B - all off
-        '''
+        """
         assert 0 <= red <= 1
         assert 0 <= green <= 1
         assert 0 <= blue <= 1
-        data = 0xF0 | (red) | (green << 1) | (blue << 2)
+        data = 0xF0 | red | (green << 1) | (blue << 2)
         self.__send_data(data)
 
     def set_position(self, position):
-        '''
+        """
             0x00 = full clockwise
             0xEF = full counter clockwise
         :param position:
         :return:
-        '''
+        """
         if position < 0x18:
             position = 0x18
         if position > 0xE8:
@@ -55,12 +57,12 @@ class ServoModule():
         self.__send_data(position)
 
     def set_LIM_mode(self):
-        '''
+        """
             sets a specific servo to LIM mode
             LIM stands for Learned Intelligent Movement.  It is a special mode where
             the servo IC stops driving the motor and just sends back the position of the servo.
         :return:
-        '''
+        """
         position = self.__send_data(SERVO_LIM_MODE)
         return position
 
@@ -70,6 +72,7 @@ class ServoModule():
 
     def __send_data(self, data):
         self.protocol.set_data(self.module_id, data)
+        resp = MODULE_NOT_RESPONDING
         for rety in range(2):
             resp = self.protocol.send_data_and_get_response(self.module_id)
             if resp != MODULE_NOT_RESPONDING:

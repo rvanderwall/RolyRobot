@@ -1,8 +1,7 @@
 __author__ = 'robert'
 
 
-
-class LightModule():
+class LightModule:
     def __init__(self, protocol, module_id):
         assert 0 <= module_id <= 3
         self.protocol = protocol
@@ -12,9 +11,8 @@ class LightModule():
         self.__set_data(LED_byte1)
         self.__set_data(LED_byte2)
 
-
     def set_color(self, red, green, blue, fade_time):
-        '''
+        """
             The bytes RED, GREEN and BLUE  should have a value from 0 - 7   =  a total of 512 options.
             There are 8 levels of brightness for each color where 0 is OFF and 7 is full brightness.
 
@@ -33,13 +31,13 @@ class LightModule():
         :param blue:
         :param fade_time:
         :return:
-        '''
+        """
         assert 0 <= red <= 0x7
         assert 0 <= green <= 0x7
         assert 0 <= blue <= 0x7
         assert 0 <= fade_time <= 0x7
-        LED_byte1 = (green<<3) | red
-        LED_byte2 = 0x40 | (fade_time<<3) | blue
+        LED_byte1 = (green << 3) | red
+        LED_byte2 = 0x40 | (fade_time << 3) | blue
         self.__set_data(LED_byte1)
         self.__set_data(LED_byte2)
 

@@ -1,12 +1,16 @@
-__author__ = 'robert'
-
 import unittest
 
 from MeccanoModules.Protocol import MeccaProtocol
 
-class mock_port():
+__author__ = 'robert'
+
+
+class MockPort:
     def __init__(self):
         self.bytes = []
+
+    def send_many_bytes(self, bytes):
+        self.bytes.extend(bytes)
 
     def send_one_byte(self, byte):
         self.bytes.append(byte)
@@ -14,16 +18,17 @@ class mock_port():
     def receive_one_byte(self):
         return 0xfd
 
+
 class ProtocolTests(unittest.TestCase):
 
     def setUp(self):
-        self.port = mock_port()
+        self.port = MockPort()
         self.protocol = MeccaProtocol(self.port)
 
     def test_checksum_with_0s(self):
         self.protocol.data = [0, 0, 0, 0]
         module = 0
-        resp = self.protocol.send_data_and_get_response(0)
+        resp = self.protocol.send_data_and_get_response(module_id=module)
         self.assertEquals(resp, 0xfd)
 
         expected_checksum = 0x00
@@ -46,4 +51,3 @@ class ProtocolTests(unittest.TestCase):
 
         expected_checksum = 0xB2
         self.assertEquals(self.port.bytes, [0xFF, 0xE0, 0xE0, 0xE0, 0xE0, expected_checksum])
-

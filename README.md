@@ -1,2 +1,2 @@
-# RolyRobot
-Meccanoid
+Controller for Meccanoid servos.
+

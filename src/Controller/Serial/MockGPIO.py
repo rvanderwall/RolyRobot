@@ -2,6 +2,7 @@
 
 gpio_output = []
 
+
 class MockGPIO:
     def __init__(self):
         self.BCM = 1

@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# No need to add install packages
+*.pkg
+
 # C extensions
 *.so
 .DS_Store
