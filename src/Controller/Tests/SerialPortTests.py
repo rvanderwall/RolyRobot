@@ -2,6 +2,7 @@ from datetime import datetime
 import unittest
 
 from Serial.SerialPort import SerialPort, NOMINAL_BIT_DELAY
+from Utils.logger import Logger
 
 __author__ = 'robert'
 
@@ -9,8 +10,9 @@ __author__ = 'robert'
 class SerialPortTests(unittest.TestCase):
 
     def setUp(self):
+        logger = Logger(False)
         pin = 4
-        self.port = SerialPort(pin=pin, bit_compensation=10)
+        self.port = SerialPort(logger, pin=pin, bit_compensation=10)
 
     def test_can_sent_byte_of_0(self):
         # Arrange

@@ -5,16 +5,18 @@ from MeccanoModules.Protocol import MAX_NUM_MODULES
 from MeccanoModules.ServoModule import ServoModule
 from MeccanoModules.LightModule import LightModule
 
+
 __author__ = 'robert'
 
 
 class ModuleDiscovery:
-    def __init__(self, serial_port):
+    def __init__(self, logger, serial_port):
+        self.logger = logger
         self.protocol = MeccaProtocol(serial_port)
         self.modules = [None] * MAX_NUM_MODULES
 
     def discover_modules_in_channel(self):
-        print("Discover modules")
+        self.logger.info("Discover modules")
         self.protocol.set_initialization_sequence()
 
         for module_id in range(MAX_NUM_MODULES):
@@ -35,16 +37,16 @@ class ModuleDiscovery:
         found = False
         counter = 0
         while not found and counter < 10:
-            # print("Top of module discovery loop {} for module {}".format(counter, module_id))
+            self.logger.debug("Top of module discovery loop {} for module {}".format(counter, module_id))
 
             resp = self.protocol.send_data_and_get_response(module_id)
-            # print("Got resp {} from module {}".format(hex(resp), module_id))
+            self.logger.debug("Got resp {} from module {}".format(hex(resp), module_id))
 
             if resp == MODULE_NOT_RESPONDING:
-                print("ERROR: Module {} not responding to discovery query".format(module_id))
+                self.logger.error("Module {} not responding to discovery query".format(module_id))
 
             if resp == ID_NOT_ASSIGNED:
-                print("Module {} has responded to discovery query".format(module_id))
+                self.logger.info("Module {} has responded to discovery query".format(module_id))
                 found = True
 
             counter += 1
@@ -56,9 +58,9 @@ class ModuleDiscovery:
         found = False
         counter = 0
         while not found and counter < 2:
-            # print("Top of module type discovery loop {} for module {}".format(counter, module_id))
+            self.logger.debug("Top of module type discovery loop {} for module {}".format(counter, module_id))
             resp = self.protocol.send_data_and_get_response(module_id)
-            # print("Got resp {} from module {}".format(hex(resp), module_id))
+            self.logger.debug("Got resp {} from module {}".format(hex(resp), module_id))
 
             if resp == MODULE_TYPE_SERVO:
                 module = ServoModule(self.protocol, module_id)
@@ -82,9 +84,13 @@ class ModuleDiscovery:
 
 if __name__ == "__main__":
     from Serial.SerialPort import SerialPort
-    print("Meccano Module")
-    port = SerialPort(pin=4, bit_compensation=77)
-    md = ModuleDiscovery(port)
+    from Utils.logger import Logger
+
+    logger = Logger(True)
+    logger.info("Meccano Module")
+
+    port = SerialPort(logger, pin=4, bit_compensation=77)
+    md = ModuleDiscovery(logger, port)
     md.discover_modules_in_channel()
 
     m1 = md.modules[0]

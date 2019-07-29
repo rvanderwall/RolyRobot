@@ -2,14 +2,16 @@ import time
 
 from MeccanoModules.ModuleDiscovery import ModuleDiscovery
 from Serial.SerialPort import SerialPort
+from Utils.logger import Logger
 
 __author__ = 'robert'
 
 
 def run_demo():
-    print("Meccano Module Demo")
-    port = SerialPort(pin=4, bit_compensation=77)
-    md = ModuleDiscovery(port)
+    logger = Logger(debug=False)
+    logger.info("Meccano Module Demo")
+    port = SerialPort(logger, pin=4, bit_compensation=77)
+    md = ModuleDiscovery(logger, port)
 
     md.discover_modules_in_channel()
 
@@ -17,7 +19,7 @@ def run_demo():
         print("FAILED TO DISCOVER MECCA SERVOS")
         exit()
   
-    print("Found modules.  Lets exercise them")
+    logger.info("Found modules.  Lets exercise them")
 
     #
     # Run the 2 servos through some tasks

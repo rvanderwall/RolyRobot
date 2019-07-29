@@ -8,6 +8,8 @@ except:
     from Serial.MockGPIO import MockGPIO
     GPIO = MockGPIO()
 
+from Utils.logger import Logger
+
 __author__ = 'robert'
 
 
@@ -21,15 +23,16 @@ class SerialPort:
     Send to the modules at 2400 baud (417 microseconds per bit)
     Recieve from the module at 1.1 mSec per bit
     """
-    def __init__(self, pin, bit_compensation):
-        print("Set mode to BCM and use pin {}".format(pin))
+    def __init__(self, logger, pin, bit_compensation):
+        self.logger = logger
+        self.logger.info("Set mode to BCM and use pin {}".format(pin))
         assert 0 <= pin <= 15
         GPIO.setmode(GPIO.BCM)
         self.pin = pin
         self.bit_delay = NOMINAL_BIT_DELAY - bit_compensation
 
     def send_many_bytes(self, bytes_to_send):
-        # print("Send many bytes")
+        self.logger.debug("Send many bytes")
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.OUT)
         for byte_to_send in bytes_to_send:
@@ -37,7 +40,7 @@ class SerialPort:
         GPIO.cleanup()
 
     def send_one_byte(self, byte_to_send):
-        # print("Send one byte")
+        self.logger.debug("Send one byte")
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.OUT)
         self.__send(byte_to_send)
@@ -55,7 +58,7 @@ class SerialPort:
         return received_byte
 
     def __send(self, byte_to_send):
-        # print("Send byte {}".format(hex(byte_to_send)))
+        self.logger.debug("Send byte {}".format(hex(byte_to_send)))
         self.__output_bit(0)        # Start bit
 
         bit_mask = 0x01
@@ -115,17 +118,17 @@ class SerialPort:
             in_pin = GPIO.input(self.pin)
             counter += 1
         if in_pin == 1:
-            print("ERROR: Start Bit not found, time exceeded")
+            self.logger.error("ERROR: Start Bit not found, time exceeded")
             return -1
 
         while in_pin == 0 and counter <= MAX_RCV_BIT_COUNT:
             in_pin = GPIO.input(self.pin)
             counter += 1
         if in_pin == 0:
-            print("ERROR: Start Bit time exceeded")
+            self.logger.error("ERROR: Start Bit time exceeded")
             return -1
 
-        # print("Stop bit found with count = {}".format(counter))
+        self.logger.debug("Stop bit found with count = {}".format(counter))
         return 0
 
     def __get_bit(self):
@@ -136,9 +139,9 @@ class SerialPort:
             in_pin = GPIO.input(self.pin)
             counter += 1
         if counter >= MAX_RCV_BIT_COUNT:
-            print("ERROR: Bit high-time exceeded")
+            self.logger.error("ERROR: Bit high-time exceeded")
             return -1
-        # print("High bit found with count = {}".format(counter))
+        self.logger.debug("High bit found with count = {}".format(counter))
 
         start_low = dt.datetime.now()
         counter = 0
@@ -146,9 +149,9 @@ class SerialPort:
             in_pin = GPIO.input(self.pin)
             counter += 1
         if counter >= MAX_RCV_BIT_COUNT:
-            print("ERROR: Bit low-time exceeded")
+            self.logger.error("ERROR: Bit low-time exceeded")
             return -1
-        # print("Low bit found with count = {}".format(counter))
+        self.logger.debug("Low bit found with count = {}".format(counter))
 
         end_low = dt.datetime.now()
 
@@ -156,10 +159,10 @@ class SerialPort:
         low_time = (end_low - start_low).microseconds
 
         if low_time > high_time:
-            # print("Got 0 bit")
+            self.logger.debug("Got 0 bit")
             return 0
         else:
-            # print("Got 1 bit")
+            self.logger.debug("Got 1 bit")
             return 1
 
 
@@ -190,15 +193,16 @@ def test_timing():
 
 
 if __name__ == "__main__":
-    print("Serial Port")
-    port = SerialPort(pin=4, bit_compensation=77)
+    logger = Logger(debug=False)
+    logger.info("Serial Port")
+    port = SerialPort(logger, pin=4, bit_compensation=77)
 #    port.send_one_byte(0xA5)
 #    port.send_many_bytes([0xAA,0x55,0xAA,0x55])
 
-    print("Send init sequence to get some actual data")
+    logger.info("Send init sequence to get some actual data")
     port.send_many_bytes([0xFF, 0xFE, 0xFE, 0xFE, 0xFE, 0xa0])
     byte = port.receive_one_byte()
-    print("byte: {}".format(hex(byte)))
+    logger.info("byte: {}".format(hex(byte)))
 #    for i in range(10):
 #        byte=port.receive_one_byte()
-#        print("Got one byte: {}".format(byte))
+#        logger.info("Got one byte: {}".format(byte))

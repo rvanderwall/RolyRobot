@@ -98,4 +98,6 @@ class MeccaProtocol:
 
 
 if __name__ == "__main__":
-    print("MeccanoModule")
+    from Utils.logger import Logger
+    logger = Logger(False)
+    logger.info("MeccanoModule")
